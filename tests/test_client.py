@@ -6,9 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from ai4wechat.client import (
     ILinkClient,
     ILinkMessage,
-    QRCodeResult,
-    QRStatusResult,
-    GetUpdatesResult,
     _random_wechat_uin,
     _base_info,
 )

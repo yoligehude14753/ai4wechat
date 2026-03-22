@@ -1,7 +1,5 @@
 """Tests for the HTTP adapter bridge."""
 
-import json
-import asyncio
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch, MagicMock
 

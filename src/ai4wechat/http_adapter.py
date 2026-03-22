@@ -13,16 +13,14 @@ Usage (Python):
     serve("http://localhost:8000/chat")
 """
 
-import asyncio
 import logging
-from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Optional, Union
 
 import httpx
 
 from .bot import Bot
-from .formatter import format_for_wechat, truncate_for_wechat
+from .formatter import format_for_wechat
 from .login import DEFAULT_TOKEN_DIR
 from .types import Message
 

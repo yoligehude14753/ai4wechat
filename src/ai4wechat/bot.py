@@ -18,12 +18,12 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from .client import ILinkClient, ILinkMessage
 from .formatter import format_for_wechat, truncate_for_wechat
 from .login import login, login_web, DEFAULT_TOKEN_DIR
-from .types import Message, MessageType, _classify_items
+from .types import Message, _classify_items
 
 log = logging.getLogger("ai4wechat")
 
