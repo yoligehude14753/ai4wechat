@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ai4wechat"
+version = "0.1.0"
+description = "Make your AI product usable inside WeChat."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "ai4wechat contributors" }]
+keywords = [
+    "wechat",
+    "ai",
+    "llm",
+    "agent",
+    "connector",
+    "bridge",
+    "ilink",
+    "chatbot",
+    "webhook",
+    "channel",
+    "wechat-bot",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = ["httpx>=0.25"]
+
+[project.optional-dependencies]
+qrcode = ["qrcode[pil]"]
+web = ["aiohttp>=3.9"]
+all = ["qrcode[pil]", "aiohttp>=3.9"]
+dev = ["pytest", "pytest-asyncio", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/ai4wechat/ai4wechat"
+Documentation = "https://github.com/ai4wechat/ai4wechat#quick-start"
+Repository = "https://github.com/ai4wechat/ai4wechat"
+Issues = "https://github.com/ai4wechat/ai4wechat/issues"
+
+[project.scripts]
+ai4wechat-login = "ai4wechat.login:main"
+ai4wechat-serve = "ai4wechat.http_adapter:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai4wechat"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
