@@ -2,7 +2,13 @@
 
 Make your AI product usable inside WeChat.
 
-ai4wechat sits between your AI service and WeChat. Users send messages in a WeChat conversation, your AI responds — no new app, no new frontend needed. Two ways to integrate: point it at an existing HTTP endpoint, or embed it in Python.
+You've built an AI service — a chatbot, an assistant, an agent, a copilot. It works over API or web. But your users are on WeChat. They don't want to open a browser or download an app. They want to send a message and get an answer, right where they already are.
+
+ai4wechat makes that possible. It connects your existing AI service to WeChat so users can interact with your product directly from a WeChat conversation. No new frontend, no app store, no user migration. Install, scan a QR code, and your AI is live in WeChat.
+
+Two ways to integrate:
+- **HTTP bridge** — your AI service already has an HTTP endpoint? One command and it's in WeChat.
+- **Python SDK** — building in Python? Embed directly with a decorator.
 
 [中文文档](README_CN.md) · [![PyPI](https://img.shields.io/pypi/v/ai4wechat.svg)](https://pypi.org/project/ai4wechat/) · [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 

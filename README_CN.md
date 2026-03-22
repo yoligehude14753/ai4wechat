@@ -2,7 +2,13 @@
 
 让你的 AI 产品在微信中被使用。
 
-ai4wechat 架在你的 AI 服务和微信之间。用户在微信对话里发消息，你的 AI 回复 — 不需要做新 App，不需要新前端。两种接入方式：指向现有 HTTP 接口，或嵌入 Python 代码。
+你做了一个 AI 服务 — 聊天助手、智能客服、AI Agent、知识库问答。它能通过 API 或网页访问。但你的用户在微信里。他们不想开浏览器，不想装新 App，就想在微信里发一条消息直接用。
+
+ai4wechat 解决这个问题。它把你现有的 AI 服务接入微信，让用户直接在微信对话里使用你的产品。不需要做新前端，不需要上架应用商店，不需要用户迁移。安装，扫码，你的 AI 就在微信里上线了。
+
+两种接入方式：
+- **HTTP 桥接** — 你的 AI 服务已经有 HTTP 接口？一条命令接入微信。
+- **Python SDK** — Python 项目？用装饰器直接嵌入。
 
 [English](README.md) · [![PyPI](https://img.shields.io/pypi/v/ai4wechat.svg)](https://pypi.org/project/ai4wechat/) · [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
