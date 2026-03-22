@@ -1,29 +1,33 @@
 # ai4wechat
 
-让你的 AI 产品在微信中被使用。
+让你的 AI 产品在微信里直接用。
 
-你做了一个 AI 服务 — 聊天助手、智能客服、AI Agent、知识库问答。它能通过 API 或网页访问。但你的用户在微信里。他们不想开浏览器，不想装新 App，就想在微信里发一条消息直接用。
+你花了很长时间做了一个 AI 产品。可能是个聊天助手，可能是个客服系统，可能是个帮人写方案的 Agent。产品本身没问题，API 也跑通了。
 
-ai4wechat 解决这个问题。它把你现有的 AI 服务接入微信，让用户直接在微信对话里使用你的产品。不需要做新前端，不需要上架应用商店，不需要用户迁移。安装，扫码，你的 AI 就在微信里上线了。
+但用户一句话让你头疼：**"能不能在微信里用？"**
+
+他们不想开网页，不想下 App，就想在微信里问一句就拿到答案。
+
+ai4wechat 干的就是这件事。你的 AI 服务不用改，装一个包、扫个码，用户就能在微信里用你的产品了。
 
 两种接入方式：
-- **HTTP 桥接** — 你的 AI 服务已经有 HTTP 接口？一条命令接入微信。
-- **Python SDK** — Python 项目？用装饰器直接嵌入。
+- **HTTP 桥接** — 服务有 HTTP 接口？一条命令就能接微信
+- **Python SDK** — Python 项目？加个装饰器就行
 
 [English](README.md) · [![PyPI](https://img.shields.io/pypi/v/ai4wechat.svg)](https://pypi.org/project/ai4wechat/) · [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 快速开始
 
-### 接入现有 AI 服务（HTTP 桥接）
+### 接入现有服务（HTTP 桥接）
 
 ```bash
 pip install ai4wechat
 ai4wechat-serve --target-url http://localhost:8000/chat
 ```
 
-微信扫码。消息会转发给你的服务，回复自动发回微信。
+扫码就完事了。用户在微信里发消息，你的 AI 回复。
 
-### 嵌入 Python 应用
+### 直接嵌入 Python 项目
 
 ```bash
 pip install ai4wechat
@@ -47,7 +51,7 @@ async def handle(msg):
 bot.run()
 ```
 
-## HTTP 桥接工作原理
+## HTTP 桥接是怎么跑的
 
 ```mermaid
 sequenceDiagram
@@ -58,11 +62,11 @@ sequenceDiagram
     User->>Bridge: 在微信里发消息
     Bridge->>Service: POST {"text": "...", "conversation_id": "..."}
     Service-->>Bridge: {"text": "AI 回复"}
-    Bridge->>Bridge: Markdown 格式化
+    Bridge->>Bridge: 处理格式
     Bridge->>User: 在微信里回复
 ```
 
-你的服务收到的 JSON：
+你的服务收到这样的 JSON：
 
 ```json
 {
@@ -76,7 +80,7 @@ sequenceDiagram
 }
 ```
 
-你的服务返回：
+返回这样就行：
 
 ```json
 {
@@ -84,59 +88,58 @@ sequenceDiagram
 }
 ```
 
-`conversation_id` 按用户稳定，可用于维护对话历史。响应字段接受 `text`、`reply` 或 `message`。
+`conversation_id` 同一个用户不会变，拿来做多轮对话上下文就行。返回字段支持 `text`、`reply` 或 `message`。
 
-## 它帮你处理什么
+## 它帮你搞定的事
 
-**Markdown 转微信格式** — 大模型输出 Markdown，微信显示为原始符号。ai4wechat 自动把标题转成【Title】、去掉加粗斜体标记、代码块用 ---- 分隔、表格转成列表。默认开启。
+**Markdown 格式问题** — 大模型喜欢输出 Markdown，但微信不认。标题、加粗、代码块、表格全显示成原始符号。ai4wechat 发送前自动帮你转成微信能正常读的纯文本。
 
-**长消息分段** — 超过微信 ~4KB 限制的消息在段落边界分段，带页码 (1/3)、(2/3) 等。
+**消息太长** — 微信单条上限大概 4KB。超了的话 ai4wechat 会在段落边界自动切开，加上 (1/3)、(2/3) 这样的页码。
 
-**输入状态** — AI 处理消息时自动显示"对方正在输入中"。
+**输入状态** — AI 处理的时候自动给用户显示"对方正在输入中"，不会让人觉得没反应。
 
-**会话管理** — 扫码凭证保存到 `~/.ai4wechat/`，重启复用。会话过期自动检测并提示重新扫码。
+**登录凭证** — 扫一次码，凭证存在 `~/.ai4wechat/` 下面，下次启动直接用，不用重复扫。过期了自动提醒。
 
-**断线重连** — 网络中断自动指数退避重试。
+**断线重连** — 网络抖动自动重试。
 
-## 支持的消息类型
+## 消息类型支持
 
 | 类型 | 接收 | 发送 | 状态 |
 |---|---|---|---|
-| 文本 | 支持 | 支持 | 稳定 |
-| 图片 | 支持（元数据） | 规划中 | CDN 上传协议已验证 |
-| 文件 | 支持（元数据） | 规划中 | CDN 上传协议已验证 |
-| 语音 | 支持（元数据） | 规划中 | — |
-| 视频 | 支持（元数据） | 规划中 | — |
-| URL / 链接 | — | 支持（文本内） | 微信自动识别 |
-| Emoji | — | 支持（文本内） | 完全支持 |
+| 文本 | ✓ | ✓ | 稳定可用 |
+| 图片 | ✓（元数据） | 规划中 | CDN 上传协议已跑通 |
+| 文件 | ✓（元数据） | 规划中 | CDN 上传协议已跑通 |
+| 语音 | ✓（元数据） | 规划中 | — |
+| 视频 | ✓（元数据） | 规划中 | — |
+| 链接 / Emoji | — | ✓ | 微信自动识别 |
 
-文本消息已可用于生产。图片和文件发送的 CDN 上传协议已验证，在路线图中。
+文本收发已经可以上生产。图片和文件的 CDN 上传流程在协议层面验证过了，SDK 还在做。
 
-## 已知限制
+## 目前的限制
 
-- **用户必须先发消息** — 不能主动给没发过消息的用户推送（微信需要来自首条入站消息的 `context_token`）
-- **会话会过期** — 需要定期重新扫码（自动检测，会记录日志）
-- **目前仅文本** — 媒体发送协议已验证但 SDK 尚未实现
-- **仅一对一** — 暂不支持群聊
+- 用户必须先给你发一条消息，你才能回复（微信的 `context_token` 机制）
+- 登录会话会过期，过期后需要重新扫码（自动检测）
+- 媒体发送还没做完（协议跑通了，SDK 在路线图里）
+- 暂时只支持一对一，群聊还没做
 
-## 远程服务器部署
+## 部署到服务器
 
-在无法扫终端二维码的服务器上：
+在没法扫终端二维码的服务器上：
 
 ```bash
 ai4wechat-serve --target-url http://localhost:8000/chat --web --port 18891
 ```
 
-浏览器打开 `http://服务器IP:18891` 扫码。凭证持久化到会话过期。
+浏览器开 `http://服务器IP:18891` 扫码就行。凭证会存下来，重启不用再扫。
 
-## 命令行参考
+## 命令行
 
 ```bash
 ai4wechat-serve --target-url <url>                     # 启动桥接
-ai4wechat-serve --target-url <url> --web --port 18891  # 桥接 + Web 登录
-ai4wechat-serve --target-url <url> --timeout 180       # 慢模型超时
-ai4wechat-serve --target-url <url> --no-format         # 跳过 Markdown 转换
-ai4wechat-login                                         # 仅登录
+ai4wechat-serve --target-url <url> --web --port 18891  # 带 Web 登录
+ai4wechat-serve --target-url <url> --timeout 180       # 模型推理慢就调大超时
+ai4wechat-serve --target-url <url> --no-format         # 不做 Markdown 转换
+ai4wechat-login                                         # 只登录不桥接
 ai4wechat-login --web --port 18891                      # Web 登录
 ```
 
@@ -145,7 +148,7 @@ ai4wechat-login --web --port 18891                      # Web 登录
 ```python
 from ai4wechat import Bot, serve, format_for_wechat, truncate_for_wechat
 
-# HTTP 桥接
+# 桥接模式
 serve("http://localhost:8000/chat", timeout=120, web_login=False)
 
 # SDK 模式
@@ -153,25 +156,25 @@ bot = Bot(token_dir="~/.ai4wechat", auto_format=True)
 
 @bot.on_message
 async def handle(msg):
-    return "reply"        # 返回字符串回复，None 跳过
+    return "reply"        # 返回字符串就回复，返回 None 就不回
 
 @bot.on_login
 def ready():
-    print("已连接")
+    print("连上了")
 
 bot.run()
 
-# 单独使用格式化
+# 格式化工具单独用
 clean = format_for_wechat(markdown_text)
 chunks = truncate_for_wechat(long_text, max_bytes=3900)
 ```
 
-### Message 对象
+### Message
 
 ```python
 msg.id         # str
 msg.text       # str
-msg.sender     # str — 用户 ID，同 conversation_id
+msg.sender     # str — 用户 ID，就是 conversation_id
 msg.type       # MessageType — text / image / voice / file / video
 msg.timestamp  # datetime
 msg.session_id # str
@@ -182,21 +185,21 @@ msg.raw        # dict
 
 ```bash
 pip install ai4wechat                  # 核心
-pip install 'ai4wechat[qrcode]'        # + 终端二维码显示
-pip install 'ai4wechat[web]'           # + Web 登录模式
-pip install 'ai4wechat[all]'           # 全部
+pip install 'ai4wechat[qrcode]'        # 终端显示二维码
+pip install 'ai4wechat[web]'           # Web 登录
+pip install 'ai4wechat[all]'           # 全装
 ```
 
 Python 3.10+。
 
 ## 贡献
 
-欢迎 Issue 和 Pull Request。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+欢迎 Issue 和 PR。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 致谢
 
 协议研究和核心 SDK 模式来自 [@epiral](https://github.com/epiral) 的 [weixin-bot](https://github.com/epiral/weixin-bot)。
 
-## 协议
+## License
 
 [MIT](LICENSE)
