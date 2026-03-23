@@ -14,6 +14,17 @@ Two ways to integrate:
 
 <img src="docs/demo-screenshot.png" width="360" alt="AI product working inside WeChat">
 
+## Why ai4wechat
+
+ai4wechat is not just a text bridge. It already handles the real messiness of putting an AI product into WeChat:
+
+- **Existing AI services work as-is**: if your service already exposes HTTP, you can bridge it directly
+- **More than text input**: WeChat text, image, voice, file, and video messages are recognized
+- **Structured media forwarding**: media inputs are forwarded to your service as typed JSON, not just placeholder text
+- **WeChat-friendly output**: Markdown is converted to plain text that actually reads well in WeChat
+- **Long replies are safe**: messages are split at paragraph boundaries with page numbers
+- **Operational details are handled**: QR login, remote web login, typing state, session expiry detection, and reconnection
+
 ## Quick Start
 
 ### Connect an existing AI service (HTTP bridge)
@@ -88,6 +99,98 @@ Your service returns:
 
 `conversation_id` is stable per user — use it to maintain conversation history. Response field accepts `text`, `reply`, or `message`.
 
+## Multi-input support
+
+ai4wechat already distinguishes different inbound message types from WeChat and forwards them in structured form.
+
+This matters because an AI product usually needs to know whether the user sent:
+- plain text
+- an image
+- a voice note
+- a file
+- a video
+
+Instead of only giving your service placeholder text like `[Image]` or `[Voice]`, ai4wechat also forwards a `media` array with typed metadata.
+
+### Example: text message payload
+
+```json
+{
+  "message_id": "msg_text_001",
+  "conversation_id": "user_abc",
+  "user_id": "user_abc",
+  "text": "What's the weather today?",
+  "type": "text",
+  "has_media": false,
+  "media": [],
+  "timestamp": "2026-03-23T10:00:00+00:00",
+  "session_id": "sess_xyz",
+  "raw": {}
+}
+```
+
+### Example: voice message payload
+
+```json
+{
+  "message_id": "msg_voice_001",
+  "conversation_id": "user_abc",
+  "user_id": "user_abc",
+  "text": "[Voice] hello",
+  "type": "voice",
+  "has_media": true,
+  "media": [
+    {
+      "type": "voice",
+      "text": "hello",
+      "raw": {
+        "text": "hello"
+      }
+    }
+  ],
+  "timestamp": "2026-03-23T10:00:00+00:00",
+  "session_id": "sess_xyz",
+  "raw": {
+    "items": [
+      {
+        "type": 3
+      }
+    ]
+  }
+}
+```
+
+### Example: file message payload
+
+```json
+{
+  "message_id": "msg_file_001",
+  "conversation_id": "user_abc",
+  "user_id": "user_abc",
+  "text": "[File: report.pdf]",
+  "type": "file",
+  "has_media": true,
+  "media": [
+    {
+      "type": "file",
+      "file_name": "report.pdf",
+      "raw": {
+        "file_name": "report.pdf"
+      }
+    }
+  ],
+  "timestamp": "2026-03-23T10:00:00+00:00",
+  "session_id": "sess_xyz",
+  "raw": {
+    "items": [
+      {
+        "type": 4
+      }
+    ]
+  }
+}
+```
+
 ## What it handles for you
 
 **Markdown to WeChat formatting** — LLMs output Markdown but WeChat renders it as raw symbols. ai4wechat auto-converts headings to 【Title】, strips bold/italic markers, formats code blocks with ---- separators, and converts tables to readable lists. Enabled by default.
@@ -102,17 +205,30 @@ Your service returns:
 
 ## Supported message types
 
-| Type | Receive | Send | Status |
+| Type | Inbound (WeChat → your service) | Outbound (your service → WeChat) | Status |
 |---|---|---|---|
-| Text | Yes | Yes | Stable |
-| Image | Yes (as metadata) | Planned | CDN upload protocol verified |
-| File | Yes (as metadata) | Planned | CDN upload protocol verified |
-| Voice | Yes (as metadata) | Planned | — |
-| Video | Yes (as metadata) | Planned | — |
-| URL / Links | — | Yes (in text) | Auto-recognized by WeChat |
-| Emoji | — | Yes (in text) | Fully supported |
+| Text | Structured payload | Stable | Production-ready |
+| Image | Structured media metadata | Planned | Input supported, output protocol verified |
+| Voice | Structured media metadata + transcription text if present | Planned | Input supported |
+| File | Structured media metadata + filename | Planned | Input supported, output protocol verified |
+| Video | Structured media metadata | Planned | Input supported |
+| URL / Links | Included in text | Stable | Auto-recognized by WeChat |
+| Emoji | Included in text | Stable | Fully supported |
 
-Text messaging is production-ready. Image and file sending via CDN upload has been protocol-verified and is on the roadmap.
+The important distinction:
+- **Inbound**: text, image, voice, file, and video messages are already recognized and forwarded to your service
+- **Outbound**: text is stable today; media sending is still being completed at the SDK level
+
+## Example service: handle media inputs
+
+See [`examples/http_media_echo.py`](examples/http_media_echo.py) for a minimal HTTP service that:
+
+- replies to plain text
+- reads voice transcription from `media[0].text`
+- detects image inputs
+- extracts file names from file inputs
+
+This example is meant to show that ai4wechat is not only for text chat. Your backend can already react differently based on the user’s input type.
 
 ## Known limitations
 
@@ -175,6 +291,7 @@ msg.id         # str
 msg.text       # str
 msg.sender     # str — user ID, same as conversation_id
 msg.type       # MessageType — text / image / voice / file / video
+msg.media      # list[dict] — structured media metadata
 msg.timestamp  # datetime
 msg.session_id # str
 msg.raw        # dict

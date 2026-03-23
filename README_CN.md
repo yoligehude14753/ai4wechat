@@ -18,6 +18,17 @@ ai4wechat 干的就是这件事。你的 AI 服务不用改，装一个包、扫
 
 <img src="docs/demo-screenshot.png" width="360" alt="AI 产品在微信中使用">
 
+## 为什么是 ai4wechat
+
+ai4wechat 的优势不是抽象的“能接微信”，而是它已经把真正麻烦的部分处理掉了：
+
+- **现有服务不用改**：你的 AI 如果已经有 HTTP 接口，直接桥接进去就行
+- **不只是文本**：微信里发来的文本、图片、语音、文件、视频都会被识别
+- **媒体会结构化透传**：服务端拿到的不只是 `[图片]`、`[语音]` 这种占位文本，还能拿到结构化媒体信息
+- **微信格式问题已经处理**：Markdown、代码块、表格会自动转成微信可读的样子
+- **长消息不会炸**：超长内容自动分段带页码
+- **部署和登录都顺手**：扫码登录、远程 Web 登录、会话管理、断线重连都已经处理好
+
 ## 快速开始
 
 ### 接入现有服务（HTTP 桥接）
@@ -92,6 +103,105 @@ sequenceDiagram
 
 `conversation_id` 同一个用户不会变，拿来做多轮对话上下文就行。返回字段支持 `text`、`reply` 或 `message`。
 
+## 多消息类型输入
+
+ai4wechat 不只是把“文字聊天”接进微信。
+
+用户在微信里发来的：
+- 文本
+- 图片
+- 语音
+- 文件
+- 视频
+
+现在都已经能被识别，并以结构化数据转发给你的服务。
+
+这点很重要，因为很多 AI 服务真正需要知道的不是“用户发没发消息”，而是：
+- 用户发的是不是一张图
+- 用户发的是不是一段语音
+- 用户发的是不是一个文件
+
+ai4wechat 已经把这些信息整理成 `media` 数组，不需要你自己从原始字段里再猜。
+
+### 文本消息 payload 示例
+
+```json
+{
+  "message_id": "msg_text_001",
+  "conversation_id": "user_abc",
+  "user_id": "user_abc",
+  "text": "今天天气怎么样？",
+  "type": "text",
+  "has_media": false,
+  "media": [],
+  "timestamp": "2026-03-23T10:00:00+00:00",
+  "session_id": "sess_xyz",
+  "raw": {}
+}
+```
+
+### 语音消息 payload 示例
+
+```json
+{
+  "message_id": "msg_voice_001",
+  "conversation_id": "user_abc",
+  "user_id": "user_abc",
+  "text": "[Voice] hello",
+  "type": "voice",
+  "has_media": true,
+  "media": [
+    {
+      "type": "voice",
+      "text": "hello",
+      "raw": {
+        "text": "hello"
+      }
+    }
+  ],
+  "timestamp": "2026-03-23T10:00:00+00:00",
+  "session_id": "sess_xyz",
+  "raw": {
+    "items": [
+      {
+        "type": 3
+      }
+    ]
+  }
+}
+```
+
+### 文件消息 payload 示例
+
+```json
+{
+  "message_id": "msg_file_001",
+  "conversation_id": "user_abc",
+  "user_id": "user_abc",
+  "text": "[File: report.pdf]",
+  "type": "file",
+  "has_media": true,
+  "media": [
+    {
+      "type": "file",
+      "file_name": "report.pdf",
+      "raw": {
+        "file_name": "report.pdf"
+      }
+    }
+  ],
+  "timestamp": "2026-03-23T10:00:00+00:00",
+  "session_id": "sess_xyz",
+  "raw": {
+    "items": [
+      {
+        "type": 4
+      }
+    ]
+  }
+}
+```
+
 ## 它帮你搞定的事
 
 **Markdown 格式问题** — 大模型喜欢输出 Markdown，但微信不认。标题、加粗、代码块、表格全显示成原始符号。ai4wechat 发送前自动帮你转成微信能正常读的纯文本。
@@ -106,16 +216,18 @@ sequenceDiagram
 
 ## 消息类型支持
 
-| 类型 | 接收 | 发送 | 状态 |
+| 类型 | 输入侧（微信 → 你的服务） | 输出侧（你的服务 → 微信） | 状态 |
 |---|---|---|---|
-| 文本 | ✓ | ✓ | 稳定可用 |
-| 图片 | ✓（元数据） | 规划中 | CDN 上传协议已跑通 |
-| 文件 | ✓（元数据） | 规划中 | CDN 上传协议已跑通 |
-| 语音 | ✓（元数据） | 规划中 | — |
-| 视频 | ✓（元数据） | 规划中 | — |
-| 链接 / Emoji | — | ✓ | 微信自动识别 |
+| 文本 | 结构化转发 | 稳定可用 | 已可生产使用 |
+| 图片 | 结构化媒体元信息 | 规划中 | 输入已支持，输出协议已验证 |
+| 语音 | 结构化媒体元信息 + 转写文本（若存在） | 规划中 | 输入已支持 |
+| 文件 | 结构化媒体元信息 + 文件名 | 规划中 | 输入已支持，输出协议已验证 |
+| 视频 | 结构化媒体元信息 | 规划中 | 输入已支持 |
+| 链接 / Emoji | 在文本里一起转发 | 稳定可用 | 微信自动识别 |
 
-文本收发已经可以上生产。图片和文件的 CDN 上传流程在协议层面验证过了，SDK 还在做。
+这里最重要的区分是：
+- **输入侧**：文本、图片、语音、文件、视频都已经能识别并结构化透传
+- **输出侧**：文本稳定；媒体发送的协议已经验证过，SDK 还在补完
 
 ## 目前的限制
 
@@ -171,6 +283,18 @@ clean = format_for_wechat(markdown_text)
 chunks = truncate_for_wechat(long_text, max_bytes=3900)
 ```
 
+### 示例：如何处理图片 / 语音 / 文件
+
+看 [`examples/http_media_echo.py`](examples/http_media_echo.py)。
+
+这个例子会展示：
+- 收到文本就回文本
+- 收到语音就优先读取 `media[0].text`
+- 收到图片就回“我收到一张图片”
+- 收到文件就回文件名
+
+目标很简单：让你第一次看就知道，**这不只是文本聊天，微信里的媒体输入你也能拿到。**
+
 ### Message
 
 ```python
@@ -178,6 +302,7 @@ msg.id         # str
 msg.text       # str
 msg.sender     # str — 用户 ID，就是 conversation_id
 msg.type       # MessageType — text / image / voice / file / video
+msg.media      # list[dict] — 结构化媒体元信息
 msg.timestamp  # datetime
 msg.session_id # str
 msg.raw        # dict
