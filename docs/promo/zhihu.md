@@ -1,21 +1,28 @@
-开源 ai4wechat — 让你的 AI 产品在微信里被使用
+ai4wechat — 让你的 AI 产品在微信里被使用
 
-做了一个开源项目，解决一个具体的问题：你有一个 AI 服务跑在服务器上，怎么让用户直接在微信里用它。
+开源了一个工具叫 ai4wechat。
 
-你的 AI 已经有 HTTP 接口了。ai4wechat 作为中间层，把微信消息转发给你的服务，把回复发回微信。你的服务不需要任何改动。
+它做一件事：把你现有的 AI 服务接到微信里，让用户在微信对话中直接使用你的 AI。
 
-## 两种接入方式
-
-**HTTP 桥接**：适合已有 HTTP 接口的 AI 服务
+你的 AI 已经有 HTTP 接口了？一条命令就能接到微信：
 
 ```
 pip install ai4wechat
-ai4wechat-serve --target-url http://localhost:8000/chat
+ai4wechat-serve --target-url http://你的服务地址/chat
 ```
 
-扫码后，微信消息自动转发给你的服务，你的服务返回文本，用户在微信里收到回复。
+扫码就完成了。用户在微信里发消息，你的 AI 回复。
 
-**Python SDK**：适合 Python 原生项目
+👉 [在此插入截图：docs/demo-screenshot.png] 👈
+
+你的服务不需要做任何修改。ai4wechat 在中间做桥接：
+
+```
+微信用户 → 发消息 → ai4wechat → 转发给你的服务
+微信用户 ← 收回复 ← ai4wechat ← 你的服务返回
+```
+
+如果你的 AI 是 Python 写的，也可以直接嵌入：
 
 ```python
 from ai4wechat import Bot
@@ -35,26 +42,15 @@ async def handle(msg):
 bot.run()
 ```
 
-## 它做了什么
+功能：
+- HTTP 桥接模式 + Python SDK 模式
+- 大模型 Markdown 输出自动转成微信纯文本
+- 超长消息自动分段带页码
+- 服务器部署支持远程 Web 扫码
+- 凭证持久化，重启不用重新扫
 
-· 微信消息 → JSON 转发给你的服务 → 回复发回微信
-· 大模型输出的 Markdown 自动转成微信能正常显示的纯文本
-· 超长消息自动在段落边界分段，带页码
-· 处理中自动显示"对方正在输入中"
-· 服务器部署支持 Web 扫码登录
-· 凭证保存，重启不用重新扫码
+适用：ChatGPT 封装、Claude 应用、客服 AI、内部知识库、LangChain Agent、任何有 HTTP 接口的 AI 服务。
 
-## 使用效果
+GitHub: github.com/yoligehude14753/ai4wechat
 
-👉 [在此插入截图：docs/demo-screenshot.png] 👈
-
-## 如何使用
-
-1. pip install ai4wechat
-2. ai4wechat-serve --target-url http://你的服务地址/chat
-3. 微信扫码
-4. 用户在微信里发消息，你的 AI 回复
-
-GitHub：github.com/yoligehude14753/ai4wechat
-
-MIT 开源。
+MIT 开源，欢迎 Star。
