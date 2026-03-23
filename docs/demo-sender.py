@@ -1,19 +1,8 @@
 #!/usr/bin/env python3
 """
-Demo screenshot helper — send scripted responses from the WeChat bot.
-
-Does NOT poll messages. Does NOT interfere with Yoli.
-You manually trigger each response by pressing Enter.
-
-Usage:
-  python3 demo-sender.py
-
-Flow:
-  1. You send a message from your phone to the bot
-  2. Yoli replies with its AI response (ignore it, or delete it from chat)
-  3. You come back here, press Enter to send the next scripted reply
-  4. The scripted reply appears in WeChat from the same bot account
-  5. Screenshot — crop out Yoli's auto-reply if needed
+截图工具 — 用微信 Bot 账号发送预设回复。
+不停 Yoli，不影响其他服务。
+Yoli 会自动回复一条（微信里长按删掉），然后你按回车发预设内容。
 """
 
 import asyncio
@@ -27,26 +16,50 @@ TOKEN = "64c8fd61ebba@im.bot:06000027d95de651fda0b8b76c30d9871f51bc"
 BASE_URL = "https://ilinkai.weixin.qq.com"
 CHANNEL_VERSION = "0.1.0"
 
-# The user's WeChat ID — will be captured from first incoming message
 USER_ID = None
 CONTEXT_TOKEN = None
 
 SCRIPT = [
-    "收到 我来写",
-    "初稿完成",
-    "306页 150条逐项响应\n18处标了[待补充] 等你补材料",
+    # 第1条：用户问资金方向后的回复
     (
-        "收到 8份 已分配：\n"
-        "· 权限管理 → 1.2.3\n"
-        "· 3D点云 → 2.1.1\n"
-        "· 效率看板 → 2.2.8\n"
-        "· OCC数据 → 2.1.3\n"
-        "· ISO证书 → 1.2.2\n\n"
-        "还差2张 20分钟出修订版"
+        "扫了一遍行业和概念板块，本周资金最集中的方向是算力基础设施。\n\n"
+        "三条线同时放量：\n\n"
+        "· 算电协同 — 协鑫能科5天3板、累计涨50%，华电能源4连板涨33%。"
+        "驱动是"算电协同"首次写入今年政府工作报告，叠加协鑫能科旗下蚂蚁鑫能虚拟电厂落地、可调负荷690MW\n"
+        "· 算力租赁 — 拓维信息2连板，润泽科技绑定字节跳动、智算上架率超90%。"
+        "板块逻辑是GPU租赁价格企稳+头部厂商业绩预告大幅超预期（润泽科技净利预增179%-196%，拓维信息预增149%-174%）\n"
+        "· 智算中心 — 优刻得3月20日公告定增募资15亿建乌兰察布智算中心，"
+        "云赛智联签约上海市智能算力资源统筹调度平台\n\n"
+        "另外两个有异动的：\n"
+        "· 机器人 — 宇树科技3月20日科创板IPO获受理，募资42亿，2025年营收17亿同比增335%、"
+        "扣非净利6亿增674%。板块联动但分化，注意区分整机和零部件\n"
+        "· 化工 — 金牛化工近20日涨115%、近10日6个涨停板，甲醇涨价驱动。"
+        "但公司自己都发了风险提示，PE 199倍，前三季度净利还同比降了7.5%"
     ),
-    "312页 完成度94%",
-    "提醒：4月15号截止 还有13天\n还差2张图 补了我30分钟出终稿",
-    "314页 150条 全部完成 ✓",
+
+    # 第2条：用户问轮动策略后的回复
+    (
+        "用算力产业链相关ETF做板块轮动。\n\n"
+        "策略设计：\n"
+        "· 标的池：算力设备/电力/通信/计算机/人工智能5只行业ETF\n"
+        "· 轮动信号：20日调整动量（区间收益率÷区间波动率），周频调仓\n"
+        "· 持仓：选动量排名前2的ETF等权持有，跌出前3换仓\n"
+        "· 风控：单标的回撤超20%触发止损\n\n"
+        "回测区间：2025-03-24 至 2026-03-21\n\n"
+        "结果：\n"
+        "· 年化收益：34.6%（同期沪深300 +4.2%）\n"
+        "· 最大回撤：-27.8%（2025年8月市场系统性调整）\n"
+        "· 年化波动率：29.1%\n"
+        "· 夏普比率：1.10（按无风险利率2.5%计）\n"
+        "· Calmar比率：1.24\n"
+        "· 月均换手：1.8次\n\n"
+        "超额主要来自两段：2025Q4算力硬件周期启动，以及2026Q1算电协同政策催化。"
+        "8月那波回撤比较深，主要是跟着大盘调整，9月底恢复。\n\n"
+        "脚本已封装，可以每天盘前自动跑一次，把当日操作建议推到这里。要部署吗？"
+    ),
+
+    # 第3条：用户说"部署"后的回复
+    "好了，每个交易日早上8:30自动执行，结果直接推到这个对话。",
 ]
 
 
@@ -65,7 +78,6 @@ def _headers():
 
 
 async def poll_once(client, sync_buf=""):
-    """Single poll to capture user_id and context_token."""
     resp = await client.post(
         f"{BASE_URL}/ilink/bot/getupdates",
         json={"get_updates_buf": sync_buf, "base_info": {"channel_version": CHANNEL_VERSION}},
@@ -95,115 +107,86 @@ async def send(client, to_user_id, text, context_token):
         timeout=15.0,
     )
     data = resp.json()
-    ret = data.get("ret", 0)
-    if ret != 0:
-        print(f"  ⚠ sendmessage ret={ret}")
+    if data.get("ret", 0) != 0:
+        print(f"  ⚠ ret={data.get('ret')}")
     return data
 
 
 async def main():
     global USER_ID, CONTEXT_TOKEN
 
+    print()
     print("=" * 50)
-    print("ai4wechat Demo — 截图发送工具")
+    print("  ai4wechat 截图工具")
     print("=" * 50)
     print()
-    print("Yoli 不受影响，正常运行。")
-    print("本工具只负责发送预设回复。")
+    print(f"  共 {len(SCRIPT)} 条预设回复")
     print()
-    print(f"共 {len(SCRIPT)} 条预设回复：")
-    for i, s in enumerate(SCRIPT):
-        preview = s.replace('\n', ' ')[:50]
-        print(f"  [{i+1}] {preview}...")
+    print("  操作流程：")
+    print("  1. 你在手机微信里发消息")
+    print("  2. Yoli 会自动回复（长按删掉）")
+    print("  3. 回到这里按回车 → 发送预设回复")
+    print("  4. 手机截图")
     print()
+    print("-" * 50)
 
     async with httpx.AsyncClient() as client:
 
-        # Step 1: Capture user_id and context_token
-        print("-" * 50)
-        print("第1步：从你的手机给 Bot 发任意一条消息")
-        print("       （用来获取你的 user_id 和 context_token）")
+        # 获取 user_id
         print()
-        input("       发完消息后按回车...")
-        print()
-        print("正在获取...")
+        print("  先给 Bot 发一条任意消息（比如"你好"）")
+        input("  发完后按回车...")
+        print("  获取中...")
 
         sync_buf = ""
         found = False
-        for attempt in range(5):
+        for _ in range(5):
             data = await poll_once(client, sync_buf)
             if data.get("get_updates_buf"):
                 sync_buf = data["get_updates_buf"]
-
             for msg in data.get("msgs", []):
                 if msg.get("message_type") == 1:
                     USER_ID = msg.get("from_user_id", "")
                     CONTEXT_TOKEN = msg.get("context_token", "")
-                    items = msg.get("item_list", [])
-                    text = ""
-                    for item in items:
-                        if item.get("type") == 1 and item.get("text_item"):
-                            text = item["text_item"].get("text", "")
-                    print(f"  ✓ 收到消息: {text[:60]}")
-                    print(f"  ✓ user_id: {USER_ID[:30]}...")
-                    print(f"  ✓ context_token: {CONTEXT_TOKEN[:30]}...")
                     found = True
                     break
             if found:
                 break
-            print(f"  等待中... ({attempt+1}/5)")
 
         if not found:
-            print("  ✗ 没有收到消息。确认你发了消息后重试。")
+            print("  ✗ 没收到消息，重试")
             return
 
+        print(f"  ✓ 已获取")
         print()
         print("=" * 50)
-        print("准备就绪！现在开始发送预设回复。")
-        print()
-        print("操作方式：")
-        print("  1. 先在手机微信里发你的消息（按对话脚本）")
-        print("  2. Yoli 会自动回复（忽略它，截图时裁掉或删掉）")
-        print("  3. 回到这里按回车 → 发送预设回复")
-        print("  4. 手机上截图")
-        print()
-        print("输入 's' 跳过当前条")
-        print("输入 'c' 自定义发送内容")
-        print("输入 'q' 退出")
+        print("  开始截图流程")
         print("=" * 50)
         print()
 
-        # Step 2: Send scripted replies one by one
-        for i, reply_text in enumerate(SCRIPT):
-            preview = reply_text.replace('\n', ' / ')[:60]
-            print(f"[{i+1}/{len(SCRIPT)}] 下一条回复:")
-            print(f"  \"{preview}\"")
+        # 逐条发送
+        steps = [
+            "手机发：帮我看下本周A股资金在往哪个方向集中\n  → Yoli 回复后长按删掉，然后回来按回车",
+            "手机发：算力这条线能做个轮动策略吗 回测看看\n  → Yoli 回复后长按删掉，然后回来按回车",
+            "手机发：部署\n  → Yoli 回复后长按删掉，然后回来按回车",
+        ]
+
+        for i, (step, reply_text) in enumerate(zip(steps, SCRIPT)):
+            print(f"  [{i+1}/{len(SCRIPT)}]")
+            print(f"  {step}")
             print()
 
-            cmd = input("  按回车发送 (s=跳过, c=自定义, q=退出): ").strip().lower()
-
+            cmd = input("  按回车发送预设回复 (q=退出): ").strip().lower()
             if cmd == 'q':
-                print("退出")
                 break
-            elif cmd == 's':
-                print("  → 已跳过")
-                print()
-                continue
-            elif cmd == 'c':
-                custom = input("  输入自定义内容: ").strip()
-                if custom:
-                    await send(client, USER_ID, custom, CONTEXT_TOKEN)
-                    print("  ✓ 自定义回复已发送")
-                print()
-                continue
 
             await send(client, USER_ID, reply_text, CONTEXT_TOKEN)
-            print("  ✓ 已发送到微信")
+            print("  ✓ 已发送")
             print()
 
         print()
-        print("全部完成！去手机上截图吧。")
-        print("Yoli 的自动回复如果在截图范围内，长按删除即可。")
+        print("  全部完成！去手机截图。")
+        print("  Yoli 的自动回复如果还在，长按删掉。")
 
 
 if __name__ == "__main__":
