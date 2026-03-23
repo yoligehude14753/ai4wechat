@@ -76,7 +76,7 @@ bot.run()
 
 实际使用效果：
 
-[图片：demo-screenshot.png]
+👉 [在此插入截图：docs/demo-screenshot.png] 👈
 
 ## 格式化怎么做的
 

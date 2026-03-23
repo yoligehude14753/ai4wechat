@@ -11,7 +11,7 @@ Scan QR code. Your AI now works inside WeChat conversations.
 
 github.com/yoligehude14753/ai4wechat
 
-[attach demo-screenshot.png]
+👉 [发推时点附件上传：docs/demo-screenshot.png] 👈
 
 ---
 
