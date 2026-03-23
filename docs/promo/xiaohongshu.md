@@ -1,32 +1,27 @@
-让你的 AI 在微信里直接用
+开源 ai4wechat
 
-做了个开源工具 ai4wechat。
+让现有 AI 服务在微信里直接被使用。
 
-解决的问题：你有一个 AI 服务在跑，怎么让用户在微信里直接用它，不用下 App 不用开网页。
+你的 AI 产品已经有 HTTP 接口了，用户在网页或 API 上用着没问题。ai4wechat 把它接到微信里，用户在微信对话里发消息就能直接用你的 AI。
 
-用法很简单。你的 AI 服务有 HTTP 接口就行：
+不用改你的服务，不用做新 App，不用做新前端。
 
-pip install ai4wechat
-ai4wechat-serve --target-url http://你的AI服务/chat
+两种接入方式：
+· HTTP 桥接 — 指向你现有服务的 URL，ai4wechat 负责收发微信消息
+· Python SDK — 用装饰器直接嵌入你的 Python 项目
 
-扫码完成。微信里发消息，你的 AI 自动回复。
+自动处理大模型输出的 Markdown 格式问题（标题、加粗、代码块、表格都会转成微信能正常显示的纯文本）。超长消息自动分段带页码。
 
-你的服务不用改。ai4wechat 在中间做桥接，把微信消息转成 JSON 发给你的服务，回复发回微信。
+如何使用？
 
-几个实用的点：
-· 大模型输出的 Markdown 自动转成微信能正常显示的纯文本
-· 超长回复自动分段带页码
-· 处理消息时自动显示"对方正在输入中"
-· 服务器部署用 --web 模式，浏览器扫码
+1. pip install ai4wechat
+2. ai4wechat-serve --target-url http://你的服务地址/chat
+3. 微信扫码
+4. 用户在微信里发消息，你的 AI 回复
 
-如果你的 AI 是 Python 写的，也可以直接嵌入不走 HTTP。
+👉 [在此插入截图：docs/demo-screenshot.png] 👈
 
-GitHub 搜 ai4wechat，MIT 开源。
+GitHub: github.com/yoligehude14753/ai4wechat
+MIT 开源
 
-github.com/yoligehude14753/ai4wechat
-
-#AI #微信 #开源 #大模型 #ChatGPT #开发者
-
-配图：
-图1（封面）：demo-screenshot.png
-图2：README 截图
+#AI #微信 #开源 #大模型 #开发者工具

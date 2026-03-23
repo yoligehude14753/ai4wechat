@@ -1,13 +1,13 @@
 Tweet 1:
 
-I open-sourced ai4wechat — a bridge that makes existing AI services usable inside WeChat.
+Open-sourced ai4wechat — make your existing AI service usable inside WeChat.
 
-If your AI has an HTTP endpoint:
+Your AI already has an HTTP endpoint. ai4wechat bridges it to WeChat. Users send messages in WeChat, your AI responds.
 
 pip install ai4wechat
 ai4wechat-serve --target-url http://your-service/chat
 
-Scan QR code. Your AI now works inside WeChat conversations.
+Scan QR. Done.
 
 github.com/yoligehude14753/ai4wechat
 
@@ -17,41 +17,25 @@ github.com/yoligehude14753/ai4wechat
 
 Tweet 2:
 
-How it works:
+What it does:
 
-User sends message in WeChat → ai4wechat forwards as JSON to your service → your service responds → reply appears in WeChat.
+· Forwards WeChat messages to your service as JSON
+· Sends your service's response back to WeChat
+· Auto-converts LLM Markdown to WeChat-readable text
+· Splits long messages with page numbers
+· Shows typing indicator while AI processes
+· Web login mode for remote servers
 
-Your service sees: {"text": "user message", "conversation_id": "..."}
-Returns: {"text": "response"}
-
-No changes to your existing service.
+Your service needs zero changes.
 
 ---
 
 Tweet 3:
 
-Things I had to solve:
+Two integration modes:
 
-- LLM Markdown doesn't render in WeChat → auto-convert headings, bold, code blocks, tables to plain text
-- WeChat message limit ~4KB → auto-split at paragraph boundaries with page numbers
-- Session expiry → auto-detect + prompt re-scan
-- Typing indicator while AI processes
-
----
-
-Tweet 4:
-
-Also works as embedded Python SDK:
-
-from ai4wechat import Bot
-
-bot = Bot()
-
-@bot.on_message
-async def handle(msg):
-    return call_your_ai(msg.text)
-
-bot.run()
+HTTP bridge — for any AI with an HTTP endpoint
+Python SDK — embed directly with @bot.on_message decorator
 
 MIT license. pip install ai4wechat.
 
@@ -61,8 +45,8 @@ github.com/yoligehude14753/ai4wechat
 
 Chinese reply (under tweet 1):
 
-做了个开源工具 ai4wechat，让你现有的 AI 服务可以直接在微信里被使用。
+开源了 ai4wechat，让你现有的 AI 服务直接在微信里被使用。
 
-一条命令 + 扫码，你的服务不用改。大模型输出的 Markdown 自动转成微信能读的格式。
+你的服务有 HTTP 接口就行，不用改。安装，扫码，用户在微信里就能用你的 AI。
 
-GitHub 搜 ai4wechat。
+github.com/yoligehude14753/ai4wechat
