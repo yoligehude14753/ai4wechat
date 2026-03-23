@@ -16,7 +16,9 @@ ai4wechat 干的就是这件事。你的 AI 服务不用改，装一个包、扫
 
 [English](README.md) · [![PyPI](https://img.shields.io/pypi/v/ai4wechat.svg)](https://pypi.org/project/ai4wechat/) · [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-<img src="docs/demo-screenshot.png" width="360" alt="AI 产品在微信中使用">
+<img src="docs/demo-screenshot-1.png" width="420" alt="AI 产品在微信中使用 — 板块扫描">
+<br>
+<img src="docs/demo-screenshot-2.png" width="420" alt="AI 产品在微信中使用 — 策略回测">
 
 ## 为什么是 ai4wechat
 
