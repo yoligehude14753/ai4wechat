@@ -12,6 +12,8 @@ Two ways to integrate:
 
 [中文文档](README_CN.md) · [![PyPI](https://img.shields.io/pypi/v/ai4wechat.svg)](https://pypi.org/project/ai4wechat/) · [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+<img src="docs/demo-screenshot.png" width="360" alt="AI product working inside WeChat">
+
 ## Quick Start
 
 ### Connect an existing AI service (HTTP bridge)
