@@ -42,6 +42,8 @@ async def _forward_to_service(
         "user_id": msg.sender,
         "text": msg.text,
         "type": msg.type.value,
+        "has_media": bool(msg.media),
+        "media": msg.media,
         "timestamp": msg.timestamp.isoformat(),
         "session_id": msg.session_id,
         "raw": msg.raw,

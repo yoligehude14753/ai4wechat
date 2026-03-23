@@ -23,7 +23,7 @@ from typing import Any, Callable, Dict, Optional, Union
 from .client import ILinkClient, ILinkMessage
 from .formatter import format_for_wechat, truncate_for_wechat
 from .login import login, login_web, DEFAULT_TOKEN_DIR
-from .types import Message, _classify_items
+from .types import Message, _classify_items, _extract_media_items
 
 log = logging.getLogger("ai4wechat")
 
@@ -290,6 +290,7 @@ class Bot:
             sender=from_user,
             receiver=raw_msg.to_user_id,
             type=_classify_items(raw_msg.items),
+            media=_extract_media_items(raw_msg.items),
             is_group=False,
             timestamp=datetime.fromtimestamp(
                 raw_msg.create_time_ms / 1000, tz=timezone.utc
