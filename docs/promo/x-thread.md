@@ -5,7 +5,7 @@ Now you can put existing AI products directly into WeChat.
 Not just OpenClaw, Claude Code, or Codex.
 Your own AI product too.
 
-👉 [发推时附件上传：docs/demo-screenshot.png] 👈
+👉 [发推时附件上传：docs/demo-screenshot-1.png 或 demo-screenshot-2.png] 👈
 
 ---
 
